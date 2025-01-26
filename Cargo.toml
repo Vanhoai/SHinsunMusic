@@ -11,3 +11,4 @@ tower-http = { version = "0.6.2", features = ["cors", "trace"] }
 chrono = { version = "0.4.39", features = ["serde"] }
 tokio = { version = "1.43.0", features = ["full"] }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+yt-dlp = { version = "1.2.3", features = ["tracing"] }
