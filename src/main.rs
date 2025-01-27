@@ -1,74 +1,78 @@
-// use axum::{
-//     http::{
-//         header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
-//         HeaderValue, Method, StatusCode,
-//     },
-//     response::IntoResponse,
-//     routing::get,
-//     Router,
-// };
-// use tower_http::cors::CorsLayer;
-// use tower_http::trace::{self, TraceLayer};
-// use tracing::Level;
+use axum::http::{
+    header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
+    HeaderValue, Method,
+};
+use tower_http::cors::CorsLayer;
+use tower_http::trace::{self, TraceLayer};
+use tracing::Level;
 
-// async fn index() -> Result<impl IntoResponse, StatusCode> {
-//     Ok("Hello, World!")
-// }
+use core::configs::app_config::APP_CONFIG;
 
-// #[tokio::main]
-// async fn main() {
-//     tracing_subscriber::fmt()
-//         .with_target(false)
-//         .compact()
-//         .init();
-//     tracing::info!("Starting application");
-
-//     dotenv::dotenv().ok();
-
-//     let cors = CorsLayer::new()
-//         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
-//         .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
-//         .allow_credentials(true)
-//         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
-
-//     //  Add tracing layer to the application
-//     let trace_layer = TraceLayer::new_for_http()
-//         .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-//         .on_request(trace::DefaultOnRequest::new().level(Level::INFO))
-//         .on_response(trace::DefaultOnResponse::new().level(Level::INFO));
-
-//     let app = Router::new()
-//         .route("/", get(index))
-//         .layer(cors)
-//         .layer(trace_layer);
-//     let address = "127.0.0.1:8080";
-//     tracing::info!("listening on {} 🎉", address);
-
-//     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
-//     axum::serve(listener, app).await.unwrap();
-// }
-
-use std::path::PathBuf;
-use yt_dlp::fetcher::deps::Libraries;
-use yt_dlp::Youtube;
+pub mod adapters;
+pub mod application;
+pub mod core;
+pub mod server;
 
 #[tokio::main]
-pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let url = String::from("https://www.youtube.com/watch?v=slkWAKdjtvg");
+async fn main() {
+    //  Initialize tracing
+    tracing_subscriber::fmt()
+        .with_target(false)
+        .compact()
+        .init();
+    tracing::info!("Starting application");
 
-    let libraries_dir = PathBuf::from("libs");
-    let output_dir = PathBuf::from("output");
+    // Make sure to load the .env file
+    dotenv::dotenv().ok();
 
-    let youtube = libraries_dir.join("yt-dlp");
-    let ffmpeg = libraries_dir.join("ffmpeg");
+    //  Add cors layer to the application
+    let cors = CorsLayer::new()
+        .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
+        .allow_credentials(true)
+        .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
 
-    let libraries = Libraries::new(youtube, ffmpeg);
-    let fetcher = Youtube::new(libraries, output_dir)?;
+    //  Add tracing layer to the application
+    let trace_layer = TraceLayer::new_for_http()
+        .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
+        .on_request(trace::DefaultOnRequest::new().level(Level::INFO))
+        .on_response(trace::DefaultOnResponse::new().level(Level::INFO));
 
-    let thumbnail_path = fetcher
-        .download_thumbnail_from_url(url, "thumbnail.jpg")
-        .await?;
+    //  Add the application to the router
+    let app = server::init_router().layer(cors).layer(trace_layer);
 
-    println!("Thumbnail saved to: {}", thumbnail_path.display());
-    Ok(())
+    //  Start the server
+    let address = format!(
+        "{}:{}",
+        APP_CONFIG.server.network.host, APP_CONFIG.server.network.port
+    );
+    tracing::info!("listening on {} 🎉", address);
+
+    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
+
+// use std::path::PathBuf;
+// use yt_dlp::fetcher::deps::Libraries;
+// use yt_dlp::Youtube;
+
+// #[tokio::main]
+// pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//     let url = String::from("https://www.youtube.com/watch?v=slkWAKdjtvg");
+
+//     let libraries_dir = PathBuf::from("libs");
+//     let output_dir = PathBuf::from("output");
+
+//     let youtube = libraries_dir.join("yt-dlp");
+//     let ffmpeg = libraries_dir.join("ffmpeg");
+
+//     let libraries = Libraries::new(youtube, ffmpeg);
+//     let fetcher = Youtube::new(libraries, output_dir)?;
+
+//     let thumbnail_path = fetcher
+//         .download_thumbnail_from_url(url, "thumbnail.jpg")
+//         .await?;
+
+//     println!("Thumbnail saved to: {}", thumbnail_path.display());
+//     Ok(())
+// }
