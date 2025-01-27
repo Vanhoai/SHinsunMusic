@@ -6,6 +6,7 @@ use tower_http::cors::CorsLayer;
 use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
 
+use adapters::shared::di;
 use core::configs::app_config::APP_CONFIG;
 
 pub mod adapters;
@@ -24,6 +25,12 @@ async fn main() {
 
     // Make sure to load the .env file
     dotenv::dotenv().ok();
+
+    // init dependency injection
+    if let Err(e) = di::build_di().await {
+        tracing::error!("Failed to initialize DI: {}", e);
+        std::process::exit(1);
+    }
 
     //  Add cors layer to the application
     let cors = CorsLayer::new()
