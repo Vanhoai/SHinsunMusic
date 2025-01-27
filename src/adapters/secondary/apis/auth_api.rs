@@ -14,6 +14,8 @@ impl AuthApiImpl {
 #[async_trait::async_trait]
 impl AuthApi for AuthApiImpl {
     async fn verify_id_token(&self, _: String) -> Result<VerifyIdTokenResponse, Failure> {
-        todo!()
+        Ok(VerifyIdTokenResponse {
+            email: "aurorastudyvn@gmail.com".to_string(),
+        })
     }
 }
