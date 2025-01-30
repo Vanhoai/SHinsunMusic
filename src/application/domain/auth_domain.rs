@@ -3,9 +3,11 @@ use std::sync::Arc;
 
 use crate::{
     application::{
-        apis::auth_api::{AuthApi, VerifyIdTokenResponse},
+        apis::auth_api::AuthApi,
         services::auth_service::AuthService,
-        usecases::auth_usecases::{AuthResponse, AuthUseCases, OAuthRequest},
+        usecases::auth_usecases::{
+            AuthRequest, AuthResponse, AuthUseCases, VerifyIdTokenRequest, VerifyIdTokenResponse,
+        },
     },
     core::http::failure::Failure,
 };
@@ -26,23 +28,22 @@ impl AuthDomain {
 
 #[async_trait]
 impl AuthUseCases for AuthDomain {
-    /// OAuth
-    /// This function is used to authenticate the user using the OAuth flow.
-    /// It takes an OAuthRequest as input and returns an AuthResponse.
-    ///
-    /// Following are the steps to authenticate the user using the OAuth flow:
-    /// 1. Verify the id_token
-    /// 2. Get information about the user from the id_token and firebase authentication
-    /// 3. Create or get user from database
-    /// 4. Create a new access, refresh token
-    /// 5. Return the access and refresh token
-    async fn oauth(&self, req: OAuthRequest) -> Result<AuthResponse, Failure> {
-        let verify_response: VerifyIdTokenResponse =
-            self.auth_api.verify_id_token(req.id_token).await?;
+    async fn sign_in(&self, _: AuthRequest) -> Result<AuthResponse, Failure> {
+        todo!()
+    }
 
-        Ok(AuthResponse {
-            access_token: verify_response.email.clone(),
-            refresh_token: verify_response.email,
-        })
+    async fn verify_token(
+        &self,
+        req: VerifyIdTokenRequest,
+    ) -> Result<VerifyIdTokenResponse, Failure> {
+        let response = self.auth_api.verify_id_token(&req.id_token).await?;
+
+        if response.sub != req.uuid {
+            return Err(Failure::Unauthorized(
+                "Invalid account with uuid".to_string(),
+            ));
+        }
+
+        Ok(response)
     }
 }

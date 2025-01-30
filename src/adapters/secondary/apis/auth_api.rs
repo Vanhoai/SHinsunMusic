@@ -1,5 +1,6 @@
 use crate::{
-    application::apis::auth_api::{AuthApi, VerifyIdTokenResponse},
+    adapters::shared::firebase::firebase_app::firebase,
+    application::{apis::auth_api::AuthApi, usecases::auth_usecases::VerifyIdTokenResponse},
     core::http::failure::Failure,
 };
 
@@ -13,9 +14,15 @@ impl AuthApiImpl {
 
 #[async_trait::async_trait]
 impl AuthApi for AuthApiImpl {
-    async fn verify_id_token(&self, _: String) -> Result<VerifyIdTokenResponse, Failure> {
+    async fn verify_id_token(&self, id_token: &str) -> Result<VerifyIdTokenResponse, Failure> {
+        let response = firebase().verify_auth_token(id_token).await?;
+
         Ok(VerifyIdTokenResponse {
-            email: "aurorastudyvn@gmail.com".to_string(),
+            exp: response.exp,
+            iat: response.iat,
+            iss: response.iss,
+            sub: response.sub,
+            auth_time: response.auth_time,
         })
     }
 }

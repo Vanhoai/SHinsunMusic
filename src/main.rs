@@ -2,11 +2,12 @@ use axum::http::{
     header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
     HeaderValue, Method,
 };
+use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
 
-use adapters::shared::di;
+use adapters::shared::{di, firebase};
 use core::configs::app_config::APP_CONFIG;
 
 pub mod adapters;
@@ -29,6 +30,12 @@ async fn main() {
     // init dependency injection
     if let Err(e) = di::build_di().await {
         tracing::error!("Failed to initialize DI: {}", e);
+        std::process::exit(1);
+    }
+
+    // init firebase
+    if let Err(e) = firebase::firebase_impl::initial().await {
+        tracing::error!("Failed to initialize firebase: {}", e);
         std::process::exit(1);
     }
 
@@ -55,7 +62,7 @@ async fn main() {
     );
     tracing::info!("listening on {} 🎉", address);
 
-    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+    let listener = TcpListener::bind(address).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
 

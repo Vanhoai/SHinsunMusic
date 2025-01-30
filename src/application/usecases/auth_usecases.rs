@@ -13,14 +13,38 @@ pub struct AuthResponse {
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
-pub struct OAuthRequest {
-    #[validate(length(min = 20))]
-    pub id_token: String,
+pub struct AuthRequest {
+    #[validate(email)]
+    pub email: String,
     #[validate(length(min = 20))]
     pub device_token: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct VerifyIdTokenRequest {
+    #[validate(length(min = 20))]
+    pub id_token: String,
+    #[validate(length(min = 10))]
+    pub uuid: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct VerifyIdTokenResponse {
+    pub exp: u64,
+    pub iat: u64,
+    pub iss: String,
+    pub sub: String,
+    pub auth_time: u64,
+}
+
 #[async_trait]
 pub trait AuthUseCases: Send + Sync {
-    async fn oauth(&self, req: OAuthRequest) -> Result<AuthResponse, Failure>;
+    async fn verify_token(
+        &self,
+        id_token: VerifyIdTokenRequest,
+    ) -> Result<VerifyIdTokenResponse, Failure>;
+
+    async fn sign_in(&self, req: AuthRequest) -> Result<AuthResponse, Failure>;
 }

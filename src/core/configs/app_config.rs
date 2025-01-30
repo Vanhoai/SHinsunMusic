@@ -4,7 +4,7 @@ use config::{Config, Environment};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
-use super::server_config::ServerConfig;
+use super::{key_config::KeyConfig, server_config::ServerConfig};
 
 #[derive(Serialize, Deserialize)]
 pub struct AppCommonConfig {
@@ -17,6 +17,7 @@ pub struct AppConfig {
     #[serde(flatten)]
     pub common: AppCommonConfig,
     pub server: ServerConfig,
+    pub key: KeyConfig,
 }
 
 #[derive(Deserialize)]
@@ -24,6 +25,7 @@ pub struct ProductionConfig {
     #[serde(flatten)]
     pub common: AppCommonConfig,
     pub server: ServerConfig,
+    pub key: KeyConfig,
 }
 
 impl AppConfig {
@@ -35,11 +37,15 @@ impl AppConfig {
             .try_deserialize::<ProductionConfig>()
             .expect("Please add env production for application");
 
-        AppConfig::new(deserialized.common, deserialized.server)
+        AppConfig::new(deserialized.common, deserialized.server, deserialized.key)
     }
 
-    pub fn new(common: AppCommonConfig, server: ServerConfig) -> Self {
-        AppConfig { common, server }
+    pub fn new(common: AppCommonConfig, server: ServerConfig, key: KeyConfig) -> Self {
+        AppConfig {
+            common,
+            server,
+            key,
+        }
     }
 }
 
