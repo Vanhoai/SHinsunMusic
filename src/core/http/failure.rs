@@ -21,6 +21,7 @@ pub enum Failure {
     MethodNotAllowed(String),
     UnknownFailure(String),
     Conflict(String),
+    DatabaseError(String),
 }
 
 /// This is correct structure will be returned to the client.
@@ -45,6 +46,7 @@ impl HttpFailure {
             Failure::MethodNotAllowed(msg) => (StatusCode::METHOD_NOT_ALLOWED, msg),
             Failure::UnknownFailure(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
             Failure::Conflict(msg) => (StatusCode::CONFLICT, msg),
+            Failure::DatabaseError(msg) => (StatusCode::BAD_REQUEST, msg),
         };
 
         HttpFailure { status, message }

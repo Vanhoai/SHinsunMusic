@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongodb/mongodb-community-server:latest
+    container_name: mongo_db
+    env_file:
+      - .env
+    ports:
+      - "27017:27017"
+    networks:
+      - hinsun_music_network
+
+  redis:
+    image: redis:latest
+    container_name: redis_db
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    networks:
+      - hinsun_music_network
+
+networks:
+  hinsun_music_network:
+    driver: bridge

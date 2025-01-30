@@ -14,6 +14,8 @@ use crate::{
 pub async fn execute(
     ValidatedPayload(req): ValidatedPayload<VerifyIdTokenRequest>,
 ) -> Result<HttpResponse<VerifyIdTokenResponse>, HttpFailure> {
+    println!("Req: {:?}", req);
+
     let auth_response = auth_domain()
         .verify_token(req)
         .await
