@@ -5,7 +5,4 @@
 /*service-account.json
 
 # Ignore private and public keys
-private_elliptic_key.pem
-public_elliptic_key.pem
-private_rsa_key.pem
-public_rsa_key.pem
+*.pem

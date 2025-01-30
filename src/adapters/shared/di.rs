@@ -10,11 +10,14 @@ use crate::{
         domain::auth_domain::AuthDomain,
         services::{account_service::AccountServiceImpl, auth_service::AuthServiceImpl},
     },
+    core::jwt::service::JwtServiceImpl,
 };
 
 pub static AUTH_DOMAIN: OnceCell<Arc<AuthDomain>> = OnceCell::new();
 
 pub async fn build_di() -> Result<(), Box<dyn std::error::Error>> {
+    // Utils
+    let jwt_service = Arc::new(JwtServiceImpl::new());
     let database = Arc::new(init_database().await);
 
     // Collections
@@ -37,6 +40,7 @@ pub async fn build_di() -> Result<(), Box<dyn std::error::Error>> {
         auth_service.clone(),
         account_service.clone(),
         auth_api.clone(),
+        jwt_service.clone(),
     ));
 
     AUTH_DOMAIN

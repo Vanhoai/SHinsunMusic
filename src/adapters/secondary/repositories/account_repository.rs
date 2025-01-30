@@ -31,7 +31,7 @@ impl AccountRepository for AccountRepositoryImpl {
         Ok(data.clone())
     }
 
-    async fn find_by_email(&self, email: &str) -> Result<AccountEntity, Failure> {
+    async fn find_by_email(&self, email: &str) -> Result<Option<AccountEntity>, Failure> {
         let query = doc! { "email": email };
 
         let account = self
@@ -40,11 +40,6 @@ impl AccountRepository for AccountRepositoryImpl {
             .await
             .map_err(|e| Failure::DatabaseError(e.to_string()))?;
 
-        match account {
-            Some(account) => Ok(account),
-            None => Err(Failure::NotFound(
-                "Can not find account with given filter".to_string(),
-            )),
-        }
+        Ok(account)
     }
 }

@@ -8,7 +8,7 @@ use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
 
 use adapters::shared::{di, firebase};
-use core::{configs::app_config::APP_CONFIG, cryptography::keypair, helpers};
+use core::{configs::app_config::APP_CONFIG, cryptography::keypair};
 
 pub mod adapters;
 pub mod application;
@@ -44,12 +44,6 @@ async fn main() {
         tracing::error!("Failed to generate key pair: {}", e);
         std::process::exit(1);
     }
-
-    let s1 = "hardy251223@gmail.com";
-    let s2 = "2a96353a";
-
-    let s = helpers::merge_interlaced::execute(s1, s2);
-    println!("s = {}", s);
 
     //  Add cors layer to the application
     let cors = CorsLayer::new()

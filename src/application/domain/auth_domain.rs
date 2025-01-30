@@ -1,6 +1,6 @@
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
-    Argon2, PasswordHash, PasswordVerifier,
+    Argon2,
 };
 use std::sync::Arc;
 
@@ -13,13 +13,18 @@ use crate::{
             AuthRequest, AuthResponse, AuthUseCases, VerifyIdTokenRequest, VerifyIdTokenResponse,
         },
     },
-    core::http::failure::Failure,
+    core::{
+        helpers,
+        http::failure::Failure,
+        jwt::{claims::Claims, interface::JwtService, types::TokenType},
+    },
 };
 
 pub struct AuthDomain {
     pub auth_service: Arc<dyn AuthService>,
     pub account_service: Arc<dyn AccountService>,
     pub auth_api: Arc<dyn AuthApi>,
+    pub jwt_service: Arc<dyn JwtService>,
 }
 
 impl AuthDomain {
@@ -27,11 +32,13 @@ impl AuthDomain {
         auth_service: Arc<dyn AuthService>,
         account_service: Arc<dyn AccountService>,
         auth_api: Arc<dyn AuthApi>,
+        jwt_service: Arc<dyn JwtService>,
     ) -> Self {
         AuthDomain {
             auth_service,
             account_service,
             auth_api,
+            jwt_service,
         }
     }
 }
@@ -41,26 +48,59 @@ impl AuthUseCases for AuthDomain {
     async fn sign_in(&self, req: AuthRequest) -> Result<AuthResponse, Failure> {
         self.auth_api.verify_id_token(&req.id_token).await?;
 
-        let account = self.account_service.find_by_email(&req.email).await;
-        if account.is_err() {
+        let mut option_account = self.account_service.find_by_email(&req.email).await?;
+
+        // Find account with email, if none then create new an account
+        if option_account.is_none() {
+            let password_generated = helpers::password_generate::execute(&req.uuid, &req.email);
+            let salt = SaltString::generate(&mut OsRng);
+            let argon2 = Argon2::default();
+            let password_hash = argon2
+                .hash_password(password_generated.as_bytes(), &salt)
+                .unwrap()
+                .to_string();
+
             let data = AccountEntity::new(
                 req.uuid,
                 req.name,
                 req.email,
-                "".to_string(),
+                password_hash,
                 req.avatar,
-                req.device_token,
+                req.device_token.clone(),
             );
-            let new_account = self.account_service.create_account(&data);
+
+            let new_account = self.account_service.create_account(&data).await?;
+            option_account = Some(new_account);
         }
 
-        let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-        let password_hash = argon2
-            .hash_password("".to_string().as_bytes(), &salt)
-            .unwrap();
+        let timestamp = jsonwebtoken::get_current_timestamp();
 
-        Err(Failure::BadRequest("Invalid email".to_string()))
+        // 1 hour: 60 * 60 for access token
+        let account = option_account.unwrap();
+        let mut claims = Claims {
+            id: account.base.id.unwrap().to_string(),
+            email: account.email.clone(),
+            exp: (timestamp + 60 * 60) as usize,
+            iat: timestamp as usize,
+            device_token: req.device_token,
+        };
+
+        let access_token = self
+            .jwt_service
+            .encode_token(TokenType::AccessToken, &claims)?;
+
+        // update expiry time 1 year: 365 * 24 * 60 * 60
+        claims.exp = (timestamp + 365 * 24 * 60 * 60) as usize;
+        let refresh_token = self
+            .jwt_service
+            .encode_token(TokenType::RefreshToken, &claims)?;
+
+        let response = AuthResponse {
+            access_token,
+            refresh_token,
+        };
+
+        Ok(response)
     }
 
     async fn verify_token(

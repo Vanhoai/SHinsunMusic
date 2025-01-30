@@ -11,7 +11,7 @@ use crate::{
 #[async_trait::async_trait]
 pub trait AccountService: Send + Sync {
     async fn create_account(&self, data: &AccountEntity) -> Result<AccountEntity, Failure>;
-    async fn find_by_email(&self, email: &str) -> Result<AccountEntity, Failure>;
+    async fn find_by_email(&self, email: &str) -> Result<Option<AccountEntity>, Failure>;
 }
 
 pub struct AccountServiceImpl {
@@ -26,7 +26,7 @@ impl AccountServiceImpl {
 
 #[async_trait::async_trait]
 impl AccountService for AccountServiceImpl {
-    async fn find_by_email(&self, email: &str) -> Result<AccountEntity, Failure> {
+    async fn find_by_email(&self, email: &str) -> Result<Option<AccountEntity>, Failure> {
         self.account_repository.find_by_email(email).await
     }
 
