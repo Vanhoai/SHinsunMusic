@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use mongodb::{bson::doc, Collection};
+use mongodb::{
+    bson::{doc, oid::ObjectId},
+    Collection,
+};
 
 use crate::{
     application::{
@@ -33,6 +36,18 @@ impl AccountRepository for AccountRepositoryImpl {
 
     async fn find_by_email(&self, email: &str) -> Result<Option<AccountEntity>, Failure> {
         let query = doc! { "email": email };
+
+        let account = self
+            .collection
+            .find_one(query)
+            .await
+            .map_err(|e| Failure::DatabaseError(e.to_string()))?;
+
+        Ok(account)
+    }
+
+    async fn find_by_id(&self, id: &str) -> Result<Option<AccountEntity>, Failure> {
+        let query = doc! { "_id": ObjectId::parse_str(id).unwrap() };
 
         let account = self
             .collection

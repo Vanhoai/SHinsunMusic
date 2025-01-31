@@ -1,6 +1,6 @@
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
-    Argon2,
+    Argon2, PasswordHash, PasswordVerifier,
 };
 use std::sync::Arc;
 
@@ -46,15 +46,20 @@ impl AuthDomain {
 #[async_trait::async_trait]
 impl AuthUseCases for AuthDomain {
     async fn sign_in(&self, req: AuthRequest) -> Result<AuthResponse, Failure> {
-        self.auth_api.verify_id_token(&req.id_token).await?;
+        let verify_response = self.auth_api.verify_id_token(&req.id_token).await?;
+        if verify_response.sub != req.uuid {
+            return Err(Failure::Unauthorized(
+                "Invalid account with uuid".to_string(),
+            ));
+        }
 
         let mut option_account = self.account_service.find_by_email(&req.email).await?;
+        let password_generated = helpers::password_generate::execute(&req.uuid, &req.email);
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
 
         // Find account with email, if none then create new an account
         if option_account.is_none() {
-            let password_generated = helpers::password_generate::execute(&req.uuid, &req.email);
-            let salt = SaltString::generate(&mut OsRng);
-            let argon2 = Argon2::default();
             let password_hash = argon2
                 .hash_password(password_generated.as_bytes(), &salt)
                 .unwrap()
@@ -73,10 +78,17 @@ impl AuthUseCases for AuthDomain {
             option_account = Some(new_account);
         }
 
+        let account = option_account.unwrap();
+        let parsed_hash =
+            PasswordHash::new(&account.password).map_err(|e| Failure::BadRequest(e.to_string()))?;
+
+        argon2
+            .verify_password(password_generated.as_bytes(), &parsed_hash)
+            .map_err(|e| Failure::BadRequest(e.to_string()))?;
+
         let timestamp = jsonwebtoken::get_current_timestamp();
 
         // 1 hour: 60 * 60 for access token
-        let account = option_account.unwrap();
         let mut claims = Claims {
             id: account.base.id.unwrap().to_string(),
             email: account.email.clone(),
@@ -91,6 +103,7 @@ impl AuthUseCases for AuthDomain {
 
         // update expiry time 1 year: 365 * 24 * 60 * 60
         claims.exp = (timestamp + 365 * 24 * 60 * 60) as usize;
+
         let refresh_token = self
             .jwt_service
             .encode_token(TokenType::RefreshToken, &claims)?;

@@ -9,10 +9,10 @@ use validator::Validate;
 use crate::core::http::failure::{Failure, HttpFailure};
 
 #[derive(Debug, Clone, Copy, Default)]
-pub struct ValidatedPayload<T>(pub T);
+pub struct ValidatedMiddleware<T>(pub T);
 
 #[async_trait]
-impl<S, T> FromRequest<S> for ValidatedPayload<T>
+impl<S, T> FromRequest<S> for ValidatedMiddleware<T>
 where
     S: Send + Sync,
     T: DeserializeOwned + Validate,
@@ -27,6 +27,7 @@ where
         value
             .validate()
             .map_err(|err| HttpFailure::new(Failure::BadRequest(err.to_string())))?;
-        Ok(ValidatedPayload(value))
+
+        Ok(ValidatedMiddleware(value))
     }
 }

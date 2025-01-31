@@ -5,13 +5,15 @@ use crate::{
     application::usecases::auth_usecases::{AuthRequest, AuthResponse, AuthUseCases},
     core::{
         http::{failure::HttpFailure, response::HttpResponse},
-        middlewares::validator::ValidatedPayload,
+        middlewares::validator_middleware::ValidatedMiddleware,
     },
 };
 
 pub async fn execute(
-    ValidatedPayload(req): ValidatedPayload<AuthRequest>,
+    ValidatedMiddleware(req): ValidatedMiddleware<AuthRequest>,
 ) -> Result<HttpResponse<AuthResponse>, HttpFailure> {
+    println!("Request: {:?}", req);
+
     let response = auth_domain()
         .sign_in(req)
         .await

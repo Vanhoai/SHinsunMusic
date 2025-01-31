@@ -7,15 +7,17 @@ use crate::{
         apis::auth_api::AuthApiImpl, repositories::account_repository::AccountRepositoryImpl,
     },
     application::{
-        domain::auth_domain::AuthDomain,
+        domain::{account_domain::AccountDomain, auth_domain::AuthDomain},
         services::{account_service::AccountServiceImpl, auth_service::AuthServiceImpl},
     },
     core::jwt::service::JwtServiceImpl,
+    state::AppState,
 };
 
 pub static AUTH_DOMAIN: OnceCell<Arc<AuthDomain>> = OnceCell::new();
+pub static ACCOUNT_DOMAIN: OnceCell<Arc<AccountDomain>> = OnceCell::new();
 
-pub async fn build_di() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn build_di() -> Result<Arc<AppState>, Box<dyn std::error::Error>> {
     // Utils
     let jwt_service = Arc::new(JwtServiceImpl::new());
     let database = Arc::new(init_database().await);
@@ -43,15 +45,34 @@ pub async fn build_di() -> Result<(), Box<dyn std::error::Error>> {
         jwt_service.clone(),
     ));
 
+    // account
+    let account_domain = Arc::new(AccountDomain::new(account_service.clone()));
+
     AUTH_DOMAIN
         .set(auth_domain)
         .map_err(|_| "Failed to set AUTH_HANDLER")?;
-    Ok(())
+
+    ACCOUNT_DOMAIN
+        .set(account_domain)
+        .map_err(|_| "Failed to set ACCOUNT_HANDLER")?;
+
+    let state = Arc::new(AppState {
+        jwt_service: jwt_service.clone(),
+    });
+
+    Ok(state)
 }
 
 pub fn auth_domain() -> Arc<AuthDomain> {
     AUTH_DOMAIN
         .get()
         .expect("AUTH DOMAIN not initialized")
+        .clone()
+}
+
+pub fn account_domain() -> Arc<AccountDomain> {
+    ACCOUNT_DOMAIN
+        .get()
+        .expect("ACCOUNT DOMAIN not initialized")
         .clone()
 }

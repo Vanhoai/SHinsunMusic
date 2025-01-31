@@ -12,6 +12,7 @@ use crate::{
 pub trait AccountService: Send + Sync {
     async fn create_account(&self, data: &AccountEntity) -> Result<AccountEntity, Failure>;
     async fn find_by_email(&self, email: &str) -> Result<Option<AccountEntity>, Failure>;
+    async fn find_by_id(&self, id: &str) -> Result<Option<AccountEntity>, Failure>;
 }
 
 pub struct AccountServiceImpl {
@@ -31,13 +32,17 @@ impl AccountService for AccountServiceImpl {
     }
 
     async fn create_account(&self, data: &AccountEntity) -> Result<AccountEntity, Failure> {
-        let account = self.account_repository.find_by_email(&data.email).await;
-        if account.is_ok() {
+        let account = self.account_repository.find_by_email(&data.email).await?;
+        if account.is_some() {
             return Err(Failure::Conflict(
                 "Account with this email already exists".to_string(),
             ));
         }
 
         self.account_repository.create(data).await
+    }
+
+    async fn find_by_id(&self, id: &str) -> Result<Option<AccountEntity>, Failure> {
+        self.account_repository.find_by_id(id).await
     }
 }

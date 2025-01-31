@@ -1,7 +1,9 @@
 use jsonwebtoken::{decode, encode, Algorithm, Header, Validation};
 
 use super::{claims::Claims, interface::JwtService, types::TokenType};
-use crate::core::{cryptography::keypair::KEY_PAIR, http::failure::Failure};
+use crate::core::{
+    configs::app_config::APP_CONFIG, cryptography::keypair::KEY_PAIR, http::failure::Failure,
+};
 
 pub struct JwtServiceImpl {}
 
@@ -19,7 +21,13 @@ impl JwtService for JwtServiceImpl {
             TokenType::RefreshToken => &KEY_PAIR.refresh_private_key,
         };
 
-        let encoded = encode(&Header::new(Algorithm::RS256), &claims, &private_key)
+        let algorithms = match APP_CONFIG.jwt.key_type.as_str() {
+            "Elliptic" => Algorithm::ES256,
+            "RSA" => Algorithm::RS256,
+            _ => Algorithm::RS256,
+        };
+
+        let encoded = encode(&Header::new(algorithms), &claims, &private_key)
             .map_err(|e| Failure::InternalServerError(e.to_string()))?;
 
         Ok(encoded)
@@ -31,7 +39,13 @@ impl JwtService for JwtServiceImpl {
             TokenType::RefreshToken => &KEY_PAIR.refresh_public_key,
         };
 
-        let result = decode::<Claims>(&token, &public_key, &Validation::new(Algorithm::RS256))
+        let algorithms = match APP_CONFIG.jwt.key_type.as_str() {
+            "Elliptic" => Algorithm::ES256,
+            "RSA" => Algorithm::RS256,
+            _ => Algorithm::RS256,
+        };
+
+        let result = decode::<Claims>(&token, &public_key, &Validation::new(algorithms))
             .map_err(|e| Failure::Unauthorized(e.to_string()))?;
 
         Ok(result.claims)

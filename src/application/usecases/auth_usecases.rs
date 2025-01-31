@@ -15,8 +15,6 @@ pub struct AuthResponse {
 #[serde(rename_all = "camelCase")]
 pub struct AuthRequest {
     #[validate(length(min = 20))]
-    pub id_token: String,
-    #[validate(length(min = 20))]
     pub uuid: String,
     #[validate(email)]
     pub email: String,
@@ -26,6 +24,8 @@ pub struct AuthRequest {
     pub avatar: String,
     #[validate(length(min = 20))]
     pub device_token: String,
+    #[validate(length(min = 20))]
+    pub id_token: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate)]

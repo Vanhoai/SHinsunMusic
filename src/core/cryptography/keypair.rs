@@ -1,6 +1,5 @@
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use once_cell::sync::Lazy;
-use std::path::Path;
 use std::{fs, sync::Arc};
 
 use crate::core::configs::app_config::APP_CONFIG;
@@ -74,38 +73,31 @@ pub struct KeyPair {
 /// Finally, reads the public key from the `public` directory.
 impl KeyPair {
     pub fn read_from_file(keypair_type: KeyPairType) -> Self {
-        let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
-
         // Read Access
-        let access_private_key_path =
-            workspace_root
-                .join("keys/private")
-                .join(match keypair_type {
-                    KeyPairType::Elliptic => format!("access_private_{}", ELLIPTIC_KEY),
-                    KeyPairType::RSA => format!("access_private_{}", RSA_KEY),
-                });
+        let access_private_key_path = match keypair_type {
+            KeyPairType::Elliptic => format!("keys/private/access_private_{}", ELLIPTIC_KEY),
+            KeyPairType::RSA => format!("keys/private/access_private_{}", RSA_KEY),
+        };
 
-        let access_public_key_path = workspace_root.join("keys/public").join(match keypair_type {
-            KeyPairType::Elliptic => format!("access_public_{}", ELLIPTIC_KEY),
-            KeyPairType::RSA => format!("access_public_{}", RSA_KEY),
-        });
+        let access_public_key_path = match keypair_type {
+            KeyPairType::Elliptic => format!("keys/public/access_public_{}", ELLIPTIC_KEY),
+            KeyPairType::RSA => format!("keys/public/access_public_{}", RSA_KEY),
+        };
 
         // Read Refresh
-        let refresh_private_key_path =
-            workspace_root
-                .join("keys/private")
-                .join(match keypair_type {
-                    KeyPairType::Elliptic => format!("refresh_private_{}", ELLIPTIC_KEY),
-                    KeyPairType::RSA => format!("refresh_private_{}", RSA_KEY),
-                });
+        let refresh_private_key_path = match keypair_type {
+            KeyPairType::Elliptic => format!("keys/private/refresh_private_{}", ELLIPTIC_KEY),
+            KeyPairType::RSA => format!("keys/private/refresh_private_{}", RSA_KEY),
+        };
 
-        let refresh_public_key_path = workspace_root.join("keys/public").join(match keypair_type {
-            KeyPairType::Elliptic => format!("refresh_public_{}", ELLIPTIC_KEY),
-            KeyPairType::RSA => format!("refresh_public_{}", RSA_KEY),
-        });
+        let refresh_public_key_path = match keypair_type {
+            KeyPairType::Elliptic => format!("keys/public/refresh_public_{}", ELLIPTIC_KEY),
+            KeyPairType::RSA => format!("keys/public/refresh_public_{}", RSA_KEY),
+        };
 
         let access_private_key =
             fs::read_to_string(access_private_key_path).expect("Failed to read private key");
+
         let access_public_key =
             fs::read_to_string(access_public_key_path).expect("Failed to read public key");
 

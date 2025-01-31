@@ -14,6 +14,7 @@ pub mod adapters;
 pub mod application;
 pub mod core;
 pub mod server;
+pub mod state;
 
 #[tokio::main]
 async fn main() {
@@ -28,8 +29,9 @@ async fn main() {
     dotenv::dotenv().ok();
 
     // init dependency injection
-    if let Err(e) = di::build_di().await {
-        tracing::error!("Failed to initialize DI: {}", e);
+    let state = di::build_di().await;
+    if state.is_err() {
+        tracing::error!("Failed to initialize DI");
         std::process::exit(1);
     }
 
@@ -59,7 +61,9 @@ async fn main() {
         .on_response(trace::DefaultOnResponse::new().level(Level::INFO));
 
     //  Add the application to the router
-    let app = server::init_router().layer(cors).layer(trace_layer);
+    let app = server::init_router(state.unwrap())
+        .layer(cors)
+        .layer(trace_layer);
 
     //  Start the server
     let address = format!(
