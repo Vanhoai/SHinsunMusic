@@ -75,28 +75,3 @@ async fn main() {
     let listener = TcpListener::bind(address).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
-
-// use std::path::PathBuf;
-// use yt_dlp::fetcher::deps::Libraries;
-// use yt_dlp::Youtube;
-
-// #[tokio::main]
-// pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//     let url = String::from("https://www.youtube.com/watch?v=slkWAKdjtvg");
-
-//     let libraries_dir = PathBuf::from("libs");
-//     let output_dir = PathBuf::from("output");
-
-//     let youtube = libraries_dir.join("yt-dlp");
-//     let ffmpeg = libraries_dir.join("ffmpeg");
-
-//     let libraries = Libraries::new(youtube, ffmpeg);
-//     let fetcher = Youtube::new(libraries, output_dir)?;
-
-//     let thumbnail_path = fetcher
-//         .download_thumbnail_from_url(url, "thumbnail.jpg")
-//         .await?;
-
-//     println!("Thumbnail saved to: {}", thumbnail_path.display());
-//     Ok(())
-// }

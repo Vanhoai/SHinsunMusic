@@ -13,7 +13,7 @@ pub fn init_router(state: Arc<AppState>) -> Router {
 
     let auth_prefix = format!("/{}/auth", prefix);
     let account_prefix = format!("/{}/accounts", prefix);
-    let audio_prefix = format!("/{}/audio", prefix);
+    let audio_prefix = format!("/{}/audios", prefix);
 
     Router::new()
         .nest(auth_prefix.as_str(), auth::handler::execute())

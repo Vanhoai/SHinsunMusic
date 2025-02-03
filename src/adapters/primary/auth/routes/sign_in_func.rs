@@ -12,8 +12,6 @@ use crate::{
 pub async fn execute(
     ValidatedMiddleware(req): ValidatedMiddleware<AuthRequest>,
 ) -> Result<HttpResponse<AuthResponse>, HttpFailure> {
-    println!("Request: {:?}", req);
-
     let response = auth_domain()
         .sign_in(req)
         .await

@@ -7,7 +7,7 @@ use crate::state::AppState;
 use super::routes::download_func;
 
 pub fn execute() -> Router<Arc<AppState>> {
-    println!("/audio/download");
+    println!("/audios/download");
 
     Router::new().route("/download", post(download_func::execute))
 }
