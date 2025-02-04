@@ -8,6 +8,8 @@ services:
       - .env
     ports:
       - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
     networks:
       - hinsun_music_network
 
@@ -17,8 +19,14 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - hinsun_music_network
+
+volumes:
+  mongodb_data:
+  redis_data:
 
 networks:
   hinsun_music_network:

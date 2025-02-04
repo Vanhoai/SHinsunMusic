@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use mongodb::{
     bson::{doc, oid::ObjectId},
     Collection,
 };
+use std::sync::Arc;
 
 use crate::{
     application::{

@@ -1,3 +1,4 @@
+pub mod base;
 pub mod configs;
 pub mod cryptography;
 pub mod helpers;

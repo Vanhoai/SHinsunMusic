@@ -5,13 +5,18 @@ use super::database::init_database;
 use crate::{
     adapters::secondary::{
         apis::{audio_api::AudioApiImpl, auth_api::AuthApiImpl},
-        repositories::account_repository::AccountRepositoryImpl,
+        repositories::{
+            account_repository::AccountRepositoryImpl, audio_repository::AudioRepositoryImpl,
+        },
     },
     application::{
         domain::{
             account_domain::AccountDomain, audio_domain::AudioDomain, auth_domain::AuthDomain,
         },
-        services::{account_service::AccountServiceImpl, auth_service::AuthServiceImpl},
+        services::{
+            account_service::AccountServiceImpl, audio_service::AudioServiceImpl,
+            auth_service::AuthServiceImpl,
+        },
     },
     core::jwt::service::JwtServiceImpl,
     state::AppState,
@@ -28,9 +33,11 @@ pub async fn build_di() -> Result<Arc<AppState>, Box<dyn std::error::Error>> {
 
     // Collections
     let accounts = Arc::new(database.collection("accounts"));
+    let audios = Arc::new(database.collection("audios"));
 
     // Repositories
     let account_repository = Arc::new(AccountRepositoryImpl::new(accounts.clone()));
+    let audio_repository = Arc::new(AudioRepositoryImpl::new(audios.clone()));
 
     // Api & Service
     // auth
@@ -42,6 +49,7 @@ pub async fn build_di() -> Result<Arc<AppState>, Box<dyn std::error::Error>> {
 
     // audio
     let audio_api = Arc::new(AudioApiImpl::new());
+    let audio_service = Arc::new(AudioServiceImpl::new(audio_repository.clone()));
 
     // Domain Logic
     // auth
@@ -56,7 +64,7 @@ pub async fn build_di() -> Result<Arc<AppState>, Box<dyn std::error::Error>> {
     let account_domain = Arc::new(AccountDomain::new(account_service.clone()));
 
     // audio
-    let audio_domain = Arc::new(AudioDomain::new(audio_api.clone()));
+    let audio_domain = Arc::new(AudioDomain::new(audio_service.clone(), audio_api.clone()));
 
     AUTH_DOMAIN
         .set(auth_domain)

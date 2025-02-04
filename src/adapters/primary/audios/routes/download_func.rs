@@ -13,7 +13,7 @@ pub async fn execute(
     ValidatedMiddleware(req): ValidatedMiddleware<DownloadAudioRequest>,
 ) -> Result<HttpResponse<String>, HttpFailure> {
     audio_domain()
-        .download_audio(&req)
+        .download_and_save(&req)
         .await
         .map_err(|failure| HttpFailure::new(failure))?;
 

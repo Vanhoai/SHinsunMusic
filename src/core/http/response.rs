@@ -1,5 +1,5 @@
 use axum::{http::StatusCode, response::IntoResponse, Json};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 /// struct HttpResponse
@@ -35,6 +35,46 @@ impl<T: Serialize> IntoResponse for HttpResponse<T> {
         let response = Json(json!({
             "message": self.message,
             "status": self.status.as_u16(),
+            "payload": self.payload,
+        }));
+
+        (StatusCode::OK, response).into_response()
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Meta {
+    pub page: u32,
+    pub page_size: u32,
+    pub total_page: u32,
+    pub total_record: u32,
+}
+
+pub struct HttpPaginationResponse<T: Serialize> {
+    pub status: StatusCode,
+    pub message: String,
+    pub meta: Meta,
+    pub payload: Vec<T>,
+}
+
+impl<T: Serialize> HttpPaginationResponse<T> {
+    pub fn new(status: StatusCode, message: String, meta: Meta, payload: Vec<T>) -> Self {
+        HttpPaginationResponse {
+            status,
+            message,
+            meta,
+            payload,
+        }
+    }
+}
+
+impl<T: Serialize> IntoResponse for HttpPaginationResponse<T> {
+    fn into_response(self) -> axum::response::Response {
+        let response = Json(json!({
+            "message": self.message,
+            "status": self.status.as_u16(),
+            "meta": self.meta,
             "payload": self.payload,
         }));
 

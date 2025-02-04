@@ -1,8 +1,15 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use crate::core::http::failure::Failure;
+use crate::{
+    application::entities::audio_entity::AudioEntity,
+    core::{
+        base::base_query::SearchQuery,
+        http::{failure::Failure, response::Meta},
+    },
+};
 
+/// ====================== For Download Audio Use Case ======================
 #[derive(Debug, Serialize, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct DownloadAudioRequest {
@@ -12,5 +19,17 @@ pub struct DownloadAudioRequest {
 
 #[async_trait::async_trait]
 pub trait DownloadAudioUseCase: Send + Sync {
-    async fn download_audio(&self, req: &DownloadAudioRequest) -> Result<(), Failure>;
+    async fn download_and_save(&self, req: &DownloadAudioRequest) -> Result<(), Failure>;
+}
+
+/// ====================== For Manage Audio Use Case ======================
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SearchAudioResponse {
+    pub meta: Meta,
+    pub audios: Vec<AudioEntity>,
+}
+
+#[async_trait::async_trait]
+pub trait ManageAudioUseCase: Send + Sync {
+    async fn search(&self, req: &SearchQuery) -> Result<SearchAudioResponse, Failure>;
 }
