@@ -3,7 +3,7 @@ use axum::{extract::Query, http::StatusCode};
 use crate::{
     adapters::shared::di::audio_domain,
     application::{
-        entities::audio_entity::AudioEntity, usecases::audio_usecases::ManageAudioUseCase,
+        entities::audio_entity::AudioResponse, usecases::audio_usecases::ManageAudioUseCase,
     },
     core::{
         base::base_query::SearchQuery,
@@ -13,7 +13,7 @@ use crate::{
 
 pub async fn execute(
     query: Query<SearchQuery>,
-) -> Result<HttpPaginationResponse<AudioEntity>, HttpFailure> {
+) -> Result<HttpPaginationResponse<AudioResponse>, HttpFailure> {
     let response = audio_domain()
         .search(&query)
         .await
@@ -23,7 +23,7 @@ pub async fn execute(
         status: StatusCode::OK,
         message: "Sign in successfully !!!".to_string(),
         meta: response.meta,
-        payload: response.audios,
+        payload: AudioResponse::array(response.audios),
     };
 
     Ok(http_response)

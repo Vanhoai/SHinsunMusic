@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use axum::Router;
+use tower_http::services::ServeDir;
 
 use crate::{
     adapters::primary::{accounts, audios, auth},
@@ -22,5 +23,6 @@ pub fn init_router(state: Arc<AppState>) -> Router {
             accounts::handler::execute(state.clone()),
         )
         .nest(audio_prefix.as_str(), audios::handler::execute())
+        .nest_service("/static", ServeDir::new("outputs"))
         .with_state(state)
 }

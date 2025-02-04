@@ -1,26 +1,35 @@
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use validator::{Validate, ValidationError};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct BaseQuery {
+    #[serde(deserialize_with = "parse_usize")]
     #[validate(range(min = 1, max = 100))]
-    pub page: u32,
+    pub page: usize,
+    #[serde(deserialize_with = "parse_usize")]
     #[validate(range(min = 1, max = 100))]
-    pub page_size: u32,
+    pub page_size: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+fn parse_usize<'de, D>(deserializer: D) -> Result<usize, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: &str = Deserialize::deserialize(deserializer)?;
+    usize::from_str(s).map_err(serde::de::Error::custom)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchQuery {
     #[serde(flatten)]
     pub base_query: BaseQuery,
     pub search: String,
-    #[validate(custom(function = "validate_sort_order"))]
-    pub order: String,
 }
 
-fn validate_sort_order(order: &str) -> Result<(), ValidationError> {
+pub fn validate_sort_order(order: &str) -> Result<(), ValidationError> {
     let upper = order.to_uppercase();
 
     return match upper.as_str() {

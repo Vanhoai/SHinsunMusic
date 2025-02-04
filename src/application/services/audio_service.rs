@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::{
     application::{
-        repositories::audio_repository::AudioRepository,
+        entities::audio_entity::AudioEntity, repositories::audio_repository::AudioRepository,
         usecases::audio_usecases::SearchAudioResponse,
     },
     core::{base::base_query::SearchQuery, http::failure::Failure},
@@ -12,6 +12,8 @@ use crate::{
 #[async_trait]
 pub trait AudioService: Send + Sync {
     async fn search(&self, req: &SearchQuery) -> Result<SearchAudioResponse, Failure>;
+    async fn create(&self, req: &AudioEntity) -> Result<AudioEntity, Failure>;
+    async fn update(&self, req: &AudioEntity) -> Result<AudioEntity, Failure>;
 }
 
 pub struct AudioServiceImpl {
@@ -27,6 +29,21 @@ impl AudioServiceImpl {
 #[async_trait]
 impl AudioService for AudioServiceImpl {
     async fn search(&self, req: &SearchQuery) -> Result<SearchAudioResponse, Failure> {
-        todo!()
+        self.repository.search(req).await
+    }
+
+    async fn update(&self, req: &AudioEntity) -> Result<AudioEntity, Failure> {
+        self.repository.update(req).await
+    }
+
+    async fn create(&self, req: &AudioEntity) -> Result<AudioEntity, Failure> {
+        let option_audio = self.repository.find_by_yt_id(&req.yt_id).await?;
+        if option_audio.is_some() {
+            return Err(Failure::Conflict(
+                "Audio with this yt_id already exists".to_string(),
+            ));
+        }
+
+        self.repository.create(req).await
     }
 }

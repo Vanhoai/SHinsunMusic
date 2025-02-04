@@ -45,10 +45,21 @@ impl<T: Serialize> IntoResponse for HttpResponse<T> {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Meta {
-    pub page: u32,
-    pub page_size: u32,
-    pub total_page: u32,
-    pub total_record: u32,
+    pub page: usize,
+    pub page_size: usize,
+    pub total_page: usize,
+    pub total_record: usize,
+}
+
+impl Meta {
+    pub fn empty() -> Self {
+        Meta {
+            page: 0,
+            page_size: 0,
+            total_page: 0,
+            total_record: 0,
+        }
+    }
 }
 
 pub struct HttpPaginationResponse<T: Serialize> {
