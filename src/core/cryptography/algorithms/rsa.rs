@@ -16,12 +16,9 @@ pub fn generate_rsa_keypair(
 
     let private_key_pem = keypair.private_key_to_pem_pkcs8()?;
 
-    println!("Create private key file: {}", private_key_path);
     let mut private_key_file = File::create(private_key_path)?;
-    println!("Write private key to file");
     private_key_file.write_all(&private_key_pem)?;
 
-    println!("Serializing public key to PEM format");
     let public_key_pem = keypair.public_key_to_pem()?;
     let mut public_key_file = File::create(public_key_path)?;
     public_key_file.write_all(&public_key_pem)?;
