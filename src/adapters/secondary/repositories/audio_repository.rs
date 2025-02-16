@@ -22,7 +22,7 @@ pub struct AudioRepositoryImpl {
 
 impl AudioRepositoryImpl {
     pub fn new(collection: Arc<Collection<AudioEntity>>) -> Self {
-        return AudioRepositoryImpl { collection };
+        AudioRepositoryImpl { collection }
     }
 }
 

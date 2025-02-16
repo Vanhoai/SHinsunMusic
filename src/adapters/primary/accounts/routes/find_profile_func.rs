@@ -17,7 +17,7 @@ pub async fn execute(
     let response = account_domain()
         .find_profile_with_id(&claims.id)
         .await
-        .map_err(|failure| HttpFailure::new(failure))?;
+        .map_err(HttpFailure::new)?;
 
     let http_response = HttpResponse {
         status: StatusCode::OK,

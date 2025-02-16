@@ -17,7 +17,7 @@ pub async fn execute(
     let response = audio_domain()
         .search(&query)
         .await
-        .map_err(|failure| HttpFailure::new(failure))?;
+        .map_err(HttpFailure::new)?;
 
     let http_response = HttpPaginationResponse {
         status: StatusCode::OK,

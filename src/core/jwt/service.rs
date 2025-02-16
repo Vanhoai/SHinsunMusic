@@ -13,6 +13,12 @@ impl JwtServiceImpl {
     }
 }
 
+impl Default for JwtServiceImpl {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait::async_trait]
 impl JwtService for JwtServiceImpl {
     fn encode_token(&self, token_type: TokenType, claims: &Claims) -> Result<String, Failure> {
@@ -27,7 +33,7 @@ impl JwtService for JwtServiceImpl {
             _ => Algorithm::RS256,
         };
 
-        let encoded = encode(&Header::new(algorithms), &claims, &private_key)
+        let encoded = encode(&Header::new(algorithms), &claims, private_key)
             .map_err(|e| Failure::InternalServerError(e.to_string()))?;
 
         Ok(encoded)
@@ -45,7 +51,7 @@ impl JwtService for JwtServiceImpl {
             _ => Algorithm::RS256,
         };
 
-        let result = decode::<Claims>(&token, &public_key, &Validation::new(algorithms))
+        let result = decode::<Claims>(token, public_key, &Validation::new(algorithms))
             .map_err(|e| Failure::Unauthorized(e.to_string()))?;
 
         Ok(result.claims)

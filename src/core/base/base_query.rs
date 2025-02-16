@@ -32,9 +32,9 @@ pub struct SearchQuery {
 pub fn validate_sort_order(order: &str) -> Result<(), ValidationError> {
     let upper = order.to_uppercase();
 
-    return match upper.as_str() {
+    match upper.as_str() {
         "ASC" => Ok(()),
         "DESC" => Ok(()),
         _ => Err(ValidationError::new("Order must be Asc or Desc")),
-    };
+    }
 }
