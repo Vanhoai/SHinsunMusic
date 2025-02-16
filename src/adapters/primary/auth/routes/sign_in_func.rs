@@ -12,10 +12,7 @@ use crate::{
 pub async fn execute(
     ValidatedMiddleware(req): ValidatedMiddleware<AuthRequest>,
 ) -> Result<HttpResponse<AuthResponse>, HttpFailure> {
-    let response = auth_domain()
-        .sign_in(req)
-        .await
-        .map_err(|failure| HttpFailure::new(failure))?;
+    let response = auth_domain().sign_in(req).await.map_err(HttpFailure::new)?;
 
     let http_response = HttpResponse {
         status: StatusCode::OK,

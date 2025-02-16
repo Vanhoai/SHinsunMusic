@@ -46,7 +46,7 @@ pub fn execute(s1: &str, s2: &str) -> String {
     }
 
     let res = result.iter().collect::<String>();
-    return skip_string(&res, APP_CONFIG.key.skip_number.clone());
+    skip_string(&res, APP_CONFIG.key.skip_number.clone())
 }
 
 fn skip_string(s: &str, skip: String) -> String {

@@ -17,6 +17,12 @@ impl AudioApiImpl {
     }
 }
 
+impl Default for AudioApiImpl {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait::async_trait]
 impl AudioApi for AudioApiImpl {
     async fn download_audio(
@@ -35,7 +41,7 @@ impl AudioApi for AudioApiImpl {
         let fetcher =
             Youtube::new(libraries, output_dir).map_err(|e| Failure::BadRequest(e.to_string()))?;
 
-        let url = String::from(req.url.clone());
+        let url = req.url.clone();
         let video = fetcher
             .fetch_video_infos(url)
             .await
@@ -45,7 +51,7 @@ impl AudioApi for AudioApiImpl {
 
         let audio_format = video.best_audio_format().unwrap();
         let audio_path = fetcher
-            .download_format(&audio_format, "audio.mp3")
+            .download_format(audio_format, "audio.mp3")
             .await
             .map_err(|e| Failure::BadRequest(e.to_string()))?;
 
@@ -73,7 +79,7 @@ impl AudioApi for AudioApiImpl {
 
         println!("load libraries thumbnail");
 
-        let url = String::from(req.url.clone());
+        let url = req.url.clone();
         let file_name = format!("youtube_{}_thumbnail.jpg", req.yt_id);
         println!("file name thumbnail: {:?}", file_name);
         let thumbnail_path = fetcher

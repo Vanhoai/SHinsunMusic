@@ -15,7 +15,7 @@ pub async fn execute(
     audio_domain()
         .download_and_save(&req)
         .await
-        .map_err(|failure| HttpFailure::new(failure))?;
+        .map_err(HttpFailure::new)?;
 
     let http_response = HttpResponse {
         status: StatusCode::OK,

@@ -46,7 +46,7 @@ pub async fn execute(
     let claims = state
         .jwt_service
         .decode_token(token, TokenType::AccessToken)
-        .map_err(|e| HttpFailure::new(e))?;
+        .map_err(HttpFailure::new)?;
 
     if claims.exp < chrono::Utc::now().timestamp() as usize {
         return Err(HttpFailure::new(Failure::Unauthorized(

@@ -12,6 +12,12 @@ impl AuthApiImpl {
     }
 }
 
+impl Default for AuthApiImpl {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait::async_trait]
 impl AuthApi for AuthApiImpl {
     async fn verify_id_token(&self, id_token: &str) -> Result<VerifyIdTokenResponse, Failure> {
