@@ -45,7 +45,7 @@ pub async fn execute(
     let token = parts[1];
     let claims = state
         .jwt_service
-        .decode_token(token, TokenType::AccessToken)
+        .decode_token(TokenType::AccessToken, token)
         .map_err(HttpFailure::new)?;
 
     if claims.exp < chrono::Utc::now().timestamp() as usize {

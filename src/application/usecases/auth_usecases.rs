@@ -47,6 +47,13 @@ pub struct VerifyIdTokenResponse {
     pub auth_time: u64,
 }
 
+#[derive(Debug, Serialize, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct RefreshTokenReq {
+    pub refresh_token: String,
+    pub device_token: String,
+}
+
 #[async_trait]
 pub trait AuthUseCases: Send + Sync {
     async fn verify_token(
@@ -55,4 +62,5 @@ pub trait AuthUseCases: Send + Sync {
     ) -> Result<VerifyIdTokenResponse, Failure>;
 
     async fn sign_in(&self, req: AuthRequest) -> Result<AuthResponse, Failure>;
+    async fn refresh_token(&self, req: &RefreshTokenReq) -> Result<AuthResponse, Failure>;
 }

@@ -3,7 +3,7 @@ use std::{path::Path, sync::Arc};
 use crate::{
     application::{
         apis::audio_api::{AudioApi, DownloadAudioApiRequest},
-        entities::audio_entity::AudioEntity,
+        entities::audio_entity::{AudioEntity, AudioResponse},
         services::audio_service::AudioService,
         usecases::audio_usecases::{
             CreateWithExistFileRequest, DownloadAudioRequest, DownloadAudioUseCase,
@@ -121,6 +121,11 @@ impl DownloadAudioUseCase for AudioDomain {
 impl ManageAudioUseCase for AudioDomain {
     async fn search(&self, req: &SearchQuery) -> Result<SearchAudioResponse, Failure> {
         self.audio_service.search(req).await
+    }
+
+    async fn find_audio(&self, id: &str) -> Result<AudioResponse, Failure> {
+        let audio = self.audio_service.find_one_by_id(id).await?;
+        Ok(AudioResponse::from(audio))
     }
 
     async fn create_with_exist_file(

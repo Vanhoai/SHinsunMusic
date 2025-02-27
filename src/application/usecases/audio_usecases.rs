@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use crate::{
-    application::entities::audio_entity::AudioEntity,
+    application::entities::audio_entity::{AudioEntity, AudioResponse},
     core::{
         base::base_query::SearchQuery,
         http::{failure::Failure, response::Meta},
@@ -45,4 +45,6 @@ pub trait ManageAudioUseCase: Send + Sync {
         &self,
         req: &CreateWithExistFileRequest,
     ) -> Result<AudioEntity, Failure>;
+
+    async fn find_audio(&self, id: &str) -> Result<AudioResponse, Failure>;
 }

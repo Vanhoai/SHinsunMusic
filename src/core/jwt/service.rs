@@ -39,7 +39,7 @@ impl JwtService for JwtServiceImpl {
         Ok(encoded)
     }
 
-    fn decode_token(&self, token: &str, token_type: TokenType) -> Result<Claims, Failure> {
+    fn decode_token(&self, token_type: TokenType, token: &str) -> Result<Claims, Failure> {
         let public_key = match token_type {
             TokenType::AccessToken => &KEY_PAIR.access_public_key,
             TokenType::RefreshToken => &KEY_PAIR.refresh_public_key,

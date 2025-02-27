@@ -10,7 +10,8 @@ use crate::{
         entities::account_entity::AccountEntity,
         services::{account_service::AccountService, auth_service::AuthService},
         usecases::auth_usecases::{
-            AuthRequest, AuthResponse, AuthUseCases, VerifyIdTokenRequest, VerifyIdTokenResponse,
+            AuthRequest, AuthResponse, AuthUseCases, RefreshTokenReq, VerifyIdTokenRequest,
+            VerifyIdTokenResponse,
         },
     },
     core::{
@@ -113,6 +114,7 @@ impl AuthUseCases for AuthDomain {
             refresh_token,
         };
 
+        println!("response: {:#?}", response);
         Ok(response)
     }
 
@@ -127,6 +129,47 @@ impl AuthUseCases for AuthDomain {
                 "Invalid account with uuid".to_string(),
             ));
         }
+
+        Ok(response)
+    }
+
+    /**
+     * Refresh Token
+     * 1. Decode refresh token
+     * 2. Check expire time of refresh token
+     * 3. Generate new key pair and remove refresh token in redis
+     */
+    async fn refresh_token(&self, req: &RefreshTokenReq) -> Result<AuthResponse, Failure> {
+        let claims = self
+            .jwt_service
+            .decode_token(TokenType::RefreshToken, &req.refresh_token)?;
+
+        if claims.exp < chrono::Utc::now().timestamp() as usize {
+            return Err(Failure::Unauthorized("Token expired".to_string()));
+        }
+
+        let timestamp = jsonwebtoken::get_current_timestamp();
+        // 1 hour: 60 * 60 for access token
+        let mut new_claims = claims;
+        new_claims.device_token = req.device_token.clone();
+        new_claims.exp = (timestamp + 60 * 60) as usize;
+        new_claims.iat = timestamp as usize;
+
+        let access_token = self
+            .jwt_service
+            .encode_token(TokenType::AccessToken, &new_claims)?;
+
+        // update expiry time 1 year: 365 * 24 * 60 * 60
+        new_claims.exp = (timestamp + 365 * 24 * 60 * 60) as usize;
+
+        let refresh_token = self
+            .jwt_service
+            .encode_token(TokenType::RefreshToken, &new_claims)?;
+
+        let response = AuthResponse {
+            access_token,
+            refresh_token,
+        };
 
         Ok(response)
     }

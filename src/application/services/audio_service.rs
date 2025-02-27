@@ -14,6 +14,7 @@ pub trait AudioService: Send + Sync {
     async fn search(&self, req: &SearchQuery) -> Result<SearchAudioResponse, Failure>;
     async fn create(&self, req: &AudioEntity) -> Result<AudioEntity, Failure>;
     async fn update(&self, req: &AudioEntity) -> Result<AudioEntity, Failure>;
+    async fn find_one_by_id(&self, id: &str) -> Result<AudioEntity, Failure>;
 }
 
 pub struct AudioServiceImpl {
@@ -30,6 +31,15 @@ impl AudioServiceImpl {
 impl AudioService for AudioServiceImpl {
     async fn search(&self, req: &SearchQuery) -> Result<SearchAudioResponse, Failure> {
         self.repository.search(req).await
+    }
+
+    async fn find_one_by_id(&self, id: &str) -> Result<AudioEntity, Failure> {
+        let response = self.repository.find_by_id(id).await?;
+        if response.is_none() {
+            return Err(Failure::NotFound("Audio not found".to_string()));
+        }
+
+        Ok(response.unwrap())
     }
 
     async fn update(&self, req: &AudioEntity) -> Result<AudioEntity, Failure> {

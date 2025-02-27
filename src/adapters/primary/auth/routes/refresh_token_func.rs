@@ -2,7 +2,7 @@ use axum::http::StatusCode;
 
 use crate::{
     adapters::shared::di::auth_domain,
-    application::usecases::auth_usecases::{AuthRequest, AuthResponse, AuthUseCases},
+    application::usecases::auth_usecases::{AuthResponse, AuthUseCases, RefreshTokenReq},
     core::{
         http::{failure::HttpFailure, response::HttpResponse},
         middlewares::validator_middleware::ValidatedMiddleware,
@@ -10,12 +10,16 @@ use crate::{
 };
 
 pub async fn execute(
-    ValidatedMiddleware(req): ValidatedMiddleware<AuthRequest>,
+    ValidatedMiddleware(req): ValidatedMiddleware<RefreshTokenReq>,
 ) -> Result<HttpResponse<AuthResponse>, HttpFailure> {
-    let response = auth_domain().sign_in(req).await.map_err(HttpFailure::new)?;
+    let response = auth_domain()
+        .refresh_token(&req)
+        .await
+        .map_err(HttpFailure::new)?;
+
     let http_response = HttpResponse {
         status: StatusCode::OK,
-        message: "Sign in successfully !!!".to_string(),
+        message: "Refresh Token Successfully !!!".to_string(),
         payload: response,
     };
 
